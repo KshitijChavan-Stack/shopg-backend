@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
       required: true,
       enum: ['grocery', 'spices', 'personalcare', 'babycare', 'beauty'],
     },
+    brand: { type: String, default: '' },
     image: { type: String, default: '' }, // image filename or URL
     description: { type: String, default: '' },
     inStock: { type: Boolean, default: true },

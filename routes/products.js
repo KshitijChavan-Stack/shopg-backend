@@ -36,6 +36,16 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ─── GET /api/products/trending ───────────────────────────────────────────────
+router.get('/trending', async (req, res) => {
+  try {
+    const products = await Product.aggregate([{ $sample: { size: 12 } }]);
+    res.json({ success: true, products });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ─── GET /api/products/:id ────────────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
@@ -79,6 +89,21 @@ router.delete('/:id', protect, admin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
     res.json({ success: true, message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+// ─── POST /api/products/bulk ──────────────────────────────────────────────────
+router.post('/bulk', protect, admin, async (req, res) => {
+  try {
+    const products = req.body;
+    if (!Array.isArray(products)) {
+      return res.status(400).json({ success: false, message: 'Invalid data format. Expected an array.' });
+    }
+    const seedData = await Product.insertMany(products);
+    res.status(201).json({ success: true, message: `Successfully added ${seedData.length} products`, products: seedData });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

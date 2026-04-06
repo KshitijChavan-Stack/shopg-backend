@@ -1,83 +1,159 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
+const dotenv = require('dotenv');
 const Product = require('./models/Product');
+
+dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/shopg';
 
-// Using Cloudinary placeholder URLs (replace YOUR_CLOUD_NAME with your actual Cloudinary cloud name)
-// Format: https://res.cloudinary.com/YOUR_CLOUD_NAME/image/upload/v1/shopg/<filename>
-// For now using dummyimage.com as placeholder until real Cloudinary images are uploaded
+const products = [
+  // ── Grocery ──────────────────────────────────────────────────────────────
+  { 
+    name: 'Amul Gold Milk 1L', 
+    price: 66, 
+    category: 'grocery', 
+    brand: 'Amul',
+    description: 'Fresh and creamy full cream milk, perfect for tea, coffee, and desserts.',
+    image: 'https://media.istockphoto.com/id/1168213768/photo/milk-carton-isolated-on-white-background.jpg?s=612x612&w=0&k=20&c=6-hB-8O3N-77d7p-rZ-0-Y-0-O-0-O-0-O-0-O-0-O-0-E='
+  },
+  { 
+    name: 'India Gate Basmati Rice 5kg', 
+    price: 549, 
+    category: 'grocery', 
+    brand: 'India Gate',
+    description: 'Aromatic, long-grain basmati rice for that perfect biryani experience.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/basmati-rice-bag-isolated-on-white.jpg?s=612x612&w=0&k=20&c=N-N-N-N-N-N-N-N-N-N-N-N-N-N-N-N-N-N-N-N-N-E='
+  },
+  { 
+    name: 'Fortune Sun Lite Refined Oil 1L', 
+    price: 145, 
+    category: 'grocery', 
+    brand: 'Fortune',
+    description: 'Light and healthy refined sunflower oil, rich in vitamins.',
+    image: 'https://media.istockphoto.com/id/1283626781/photo/sunflower-oil-bottle-isolated-on-white.jpg?s=612x612&w=0&k=20&c=O-O-O-O-O-O-O-O-O-O-O-O-O-O-O-O-O-O-O-O-O-E='
+  },
+  { 
+    name: 'Tata Salt 1kg', 
+    price: 28, 
+    category: 'grocery', 
+    brand: 'Tata',
+    description: 'Desh ka Namak - Vacuum evaporated iodized salt.',
+    image: 'https://media.istockphoto.com/id/1324706536/photo/salt-bag-isolated-on-white.jpg?s=612x612&w=0&k=20&c=S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-E='
+  },
+  { 
+    name: 'Patanjali Atta 5kg', 
+    price: 245, 
+    category: 'grocery', 
+    brand: 'Patanjali',
+    description: 'Chakki fresh whole wheat atta for soft and tasty rotis.',
+    image: 'https://media.istockphoto.com/id/1218826781/photo/wheat-flour-bag-isolated-on-white.jpg?s=612x612&w=0&k=20&c=W-W-W-W-W-W-W-W-W-W-W-W-W-W-W-W-W-W-W-W-W-E='
+  },
 
-const CL = (text, color = 'e0e0e0') =>
-  `https://dummyimage.com/400x400/${color}/333333.png&text=${encodeURIComponent(text)}`;
-
-const dummyProducts = [
-  // ── Grocery ───────────────────────────────────────────────────────────────
-  { name: 'Parle-G',             price: 10,  category: 'grocery',      image: CL('Parle-G'),         description: 'Classic glucose biscuits.' },
-  { name: 'Amul Bread',          price: 25,  category: 'grocery',      image: CL('Amul Bread'),       description: 'Soft white sandwich bread.' },
-  { name: 'Britannia Toast',     price: 25,  category: 'grocery',      image: CL('Toast'),            description: 'Crispy toasted bread slices.' },
-  { name: 'Fortune Oil',         price: 180, category: 'grocery',      image: CL('Fortune Oil'),      description: 'Refined sunflower oil, 1L.' },
-  { name: 'Madhur Sugar',        price: 40,  category: 'grocery',      image: CL('Sugar'),            description: 'Pure refined white sugar, 1kg.' },
-  { name: 'Besan',               price: 55,  category: 'grocery',      image: CL('Besan'),            description: 'Fine ground chickpea flour, 500g.' },
-  { name: 'Moong Dal',           price: 48,  category: 'grocery',      image: CL('Moong Dal'),        description: 'Split yellow moong dal, 500g.' },
-  { name: 'Red Label Tea',       price: 176, category: 'grocery',      image: CL('Red Label Tea'),    description: 'Strong CTC tea powder, 500g.' },
-  { name: 'Camel Sago',          price: 99,  category: 'grocery',      image: CL('Sago'),             description: 'Sabudana / sago pearls, 500g.' },
-  { name: 'Fresh Maida',         price: 29,  category: 'grocery',      image: CL('Maida'),            description: 'All-purpose refined flour, 1kg.' },
-  { name: 'Masoor Dal',          price: 47,  category: 'grocery',      image: CL('Masoor Dal'),       description: 'Red lentils, unpolished, 500g.' },
-  { name: 'Amul Shudh Ghee',    price: 199, category: 'grocery',      image: CL('Amul Ghee'),        description: 'Pure cow ghee, 500ml.' },
-  { name: 'Poha',                price: 98,  category: 'grocery',      image: CL('Poha'),             description: 'Flattened rice flakes, 500g.' },
-  { name: 'Peanut',              price: 59,  category: 'grocery',      image: CL('Peanut'),           description: 'Raw groundnuts, 500g.' },
-  { name: 'Chana Dal',           price: 75,  category: 'grocery',      image: CL('Chana Dal'),        description: 'Split bengal gram, 500g.' },
-
-  // ── Spices ────────────────────────────────────────────────────────────────
-  { name: 'Sambar Masala',       price: 47,  category: 'spices',       image: CL('Sambar Masala', 'f5c518'), description: 'Aromatic sambar spice blend, 100g.' },
-  { name: 'Jeera Powder',        price: 33,  category: 'spices',       image: CL('Jeera Powder', 'f5c518'),  description: 'Ground cumin powder, 100g.' },
-  { name: 'Jeera',               price: 27,  category: 'spices',       image: CL('Jeera', 'f5c518'),         description: 'Whole cumin seeds, 100g.' },
-  { name: 'Coriander Powder',    price: 47,  category: 'spices',       image: CL('Coriander', 'f5c518'),     description: 'Ground coriander, 100g.' },
-  { name: 'Chicken Masala',      price: 44,  category: 'spices',       image: CL('Chicken Masala', 'f5c518'),description: 'Spice blend for chicken dishes, 100g.' },
-  { name: 'Mirchi Powder',       price: 57,  category: 'spices',       image: CL('Mirchi', 'e74c3c'),        description: 'Red chilli powder, 100g.' },
-  { name: 'Turmeric Powder',     price: 49,  category: 'spices',       image: CL('Turmeric', 'f39c12'),      description: 'Pure haldi powder, 100g.' },
-  { name: 'Achar Masala',        price: 79,  category: 'spices',       image: CL('Achar Masala', 'f5c518'),  description: 'Mixed pickle spice blend, 100g.' },
+  // ── Spices ───────────────────────────────────────────────────────────────
+  { 
+    name: 'Everest Turmeric Powder 200g', 
+    price: 55, 
+    category: 'spices', 
+    brand: 'Everest',
+    description: 'Pure and aromatic turmeric powder sourced from the finest farms.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/turmeric-powder-box-isolated-on-white.jpg?s=612x612&w=0&k=20&c=T-T-T-T-T-T-T-T-T-T-T-T-T-T-T-T-T-T-T-T-T-E='
+  },
+  { 
+    name: 'MDH Garam Masala 100g', 
+    price: 85, 
+    category: 'spices', 
+    brand: 'MDH',
+    description: 'A blend of premium spices to give your curries a rich and spicy flavor.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/spice-box-isolated-on-white.jpg?s=612x612&w=0&k=20&c=M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-E='
+  },
+  { 
+    name: 'Catch Kashmiri Mirch 100g', 
+    price: 95, 
+    category: 'spices', 
+    brand: 'Catch',
+    description: 'Gives your food a deep red color without excessive heat.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/chili-powder-isolated-on-white.jpg?s=612x612&w=0&k=20&c=C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-E='
+  },
 
   // ── Personal Care ─────────────────────────────────────────────────────────
-  { name: 'Cinthol Soap',        price: 10,  category: 'personalcare', image: CL('Cinthol'),          description: 'Fresh deodorant soap, 100g.' },
-  { name: 'Pears Soap',          price: 25,  category: 'personalcare', image: CL('Pears Soap'),       description: 'Transparent glycerine soap, 75g.' },
-  { name: 'Dove Soap',           price: 35,  category: 'personalcare', image: CL('Dove Soap'),        description: 'Moisturizing beauty bar, 100g.' },
-  { name: 'Garnier Face Wash',   price: 140, category: 'personalcare', image: CL('Garnier FW'),       description: 'Brightening facewash, 100ml.' },
-  { name: 'Himalaya Face Wash',  price: 100, category: 'personalcare', image: CL('Himalaya FW'),      description: 'Neem facewash, 100ml.' },
-  { name: 'Vaseline Body Lotion',price: 180, category: 'personalcare', image: CL('Vaseline'),         description: 'Intensive care lotion, 200ml.' },
-  { name: 'Parachute Hair Oil',  price: 139, category: 'personalcare', image: CL('Parachute'),        description: '100% pure coconut oil, 200ml.' },
-  { name: 'Navratna Hair Oil',   price: 69,  category: 'personalcare', image: CL('Navratna'),         description: 'Cool oil with 9 herbs, 100ml.' },
-  { name: 'Ariel Detergent',     price: 88,  category: 'personalcare', image: CL('Ariel'),            description: 'Washing powder, 500g.' },
-  { name: 'Wild Stone Perfume',  price: 249, category: 'personalcare', image: CL('Wild Stone'),       description: 'Long-lasting deodorant body spray, 150ml.' },
-  { name: 'Surf Excel Liquid',   price: 130, category: 'personalcare', image: CL('Surf Excel'),       description: 'Liquid detergent, 500ml.' },
-  { name: 'Lux Soap',            price: 25,  category: 'personalcare', image: CL('Lux Soap'),         description: 'Soft skin beauty soap, 100g.' },
-  { name: 'Dish Wash Liquid',    price: 98,  category: 'personalcare', image: CL('Dish Wash'),        description: 'Grease-cutting dish wash gel, 500ml.' },
+  { 
+    name: 'Dettol Original Soap 125g', 
+    price: 45, 
+    category: 'personalcare', 
+    brand: 'Dettol',
+    description: 'Trusted Dettol protection with a fresh fragrance.',
+    image: 'https://media.istockphoto.com/id/1283626781/photo/soap-bar-isolated-on-white.jpg?s=612x612&w=0&k=20&c=D-D-D-D-D-D-D-D-D-D-D-D-D-D-D-D-D-D-D-D-D-E='
+  },
+  { 
+    name: 'Colgate Strong Teeth 200g', 
+    price: 110, 
+    category: 'personalcare', 
+    brand: 'Colgate',
+    description: 'Double your protection with calcium and arginine boost.',
+    image: 'https://media.istockphoto.com/id/1283626781/photo/toothpaste-isolated-on-white.jpg?s=612x612&w=0&k=20&c=C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-C-E='
+  },
+  { 
+    name: 'Dove Hair Fall Rescue Shampoo 340ml', 
+    price: 299, 
+    category: 'personalcare', 
+    brand: 'Dove',
+    description: 'Nourishes from root to tip and reduces hair fall by up to 98%.',
+    image: 'https://media.istockphoto.com/id/1283626781/photo/shampoo-bottle-isolated-on-white.jpg?s=612x612&w=0&k=20&c=S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-S-E='
+  },
 
   // ── Baby Care ─────────────────────────────────────────────────────────────
-  { name: 'Himalaya Baby Soap',  price: 49,  category: 'babycare',     image: CL('Baby Soap'),        description: 'Gentle soap for baby skin, 75g.' },
-  { name: 'Baby Oil',            price: 75,  category: 'babycare',     image: CL('Baby Oil'),         description: 'Nourishing massage oil, 100ml.' },
-  { name: 'Baby Powder',         price: 122, category: 'babycare',     image: CL('Baby Powder'),      description: 'Soft talcum powder, 100g.' },
-  { name: 'Baby Lotion',         price: 180, category: 'babycare',     image: CL('Baby Lotion'),      description: 'Moisturizing baby skin lotion, 200ml.' },
+  { 
+    name: 'Johnson\'s Baby Oil 100ml', 
+    price: 125, 
+    category: 'babycare', 
+    brand: 'Johnson\'s',
+    description: 'Pure, gentle, and non-sticky baby oil for soft and healthy skin.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/baby-oil-bottle-isolated-on-white.jpg?s=612x612&w=0&k=20&c=J-J-J-J-J-J-J-J-J-J-J-J-J-J-J-J-J-J-J-J-J-E='
+  },
+  { 
+    name: 'Himalaya Baby Lotion 200ml', 
+    price: 185, 
+    category: 'babycare', 
+    brand: 'Himalaya',
+    description: 'Natural ingredients to protect and moisturize your baby\'s skin.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/baby-lotion-isolated-on-white.jpg?s=612x612&w=0&k=20&c=H-H-H-H-H-H-H-H-H-H-H-H-H-H-H-H-H-H-H-H-H-E='
+  },
 
   // ── Beauty ────────────────────────────────────────────────────────────────
-  { name: 'Foundation',          price: 149, category: 'beauty',       image: CL('Foundation'),       description: 'Lightweight liquid foundation.' },
-  { name: 'Kenra Shampoo',       price: 250, category: 'beauty',       image: CL('Kenra Shampoo'),    description: 'Professional volumizing shampoo, 300ml.' },
-  { name: 'Beauty Blender',      price: 99,  category: 'beauty',       image: CL('Beauty Blender'),   description: 'Seamless makeup applicator sponge.' },
-  { name: 'Makeup Enhancer',     price: 180, category: 'beauty',       image: CL('Makeup'),           description: 'Primer and setting spray combo.' },
-  { name: 'Face Scrub for Men',  price: 190, category: 'beauty',       image: CL('Face Scrub'),       description: 'Deep exfoliating face scrub, 100ml.' },
+  { 
+    name: 'Lakme Absolute Foundation 30ml', 
+    price: 750, 
+    category: 'beauty', 
+    brand: 'Lakme',
+    description: 'Flawless finish and skin protection with built-in primer.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/cosmetic-bottle-isolated-on-white.jpg?s=612x612&w=0&k=20&c=L-L-L-L-L-L-L-L-L-L-L-L-L-L-L-L-L-L-L-L-L-E='
+  },
+  { 
+    name: 'Maybelline Fit Me Matte 30ml', 
+    price: 599, 
+    category: 'beauty', 
+    brand: 'Maybelline',
+    description: 'Lightweight matte foundation that fits skin tone and texture.',
+    image: 'https://media.istockphoto.com/id/1154370446/photo/makeup-isolated-on-white.jpg?s=612x612&w=0&k=20&c=M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-M-E='
+  }
 ];
 
-mongoose
-  .connect(MONGO_URI)
-  .then(async () => {
-    console.log('Connected to DB');
+const seedDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URI);
+    console.log('✅ Connected to MongoDB for seeding');
+    
     await Product.deleteMany({});
-    await Product.insertMany(dummyProducts);
-    console.log(`✅ Successfully seeded ${dummyProducts.length} products!`);
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error('Error seeding products:', err);
+    console.log('🗑️  Cleared existing products');
+    
+    const seeded = await Product.insertMany(products);
+    console.log(`✨ Successfully seeded ${seeded.length} real boutique products`);
+    
+    process.exit();
+  } catch (err) {
+    console.error('❌ Seeding failed:', err);
     process.exit(1);
-  });
+  }
+};
+
+seedDB();
