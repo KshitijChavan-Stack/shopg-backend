@@ -92,6 +92,7 @@ router.post('/seed-admin', async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Admin account created successfully',
+      token: generateToken(adminUser._id),
       user: { id: adminUser._id, username: adminUser.username, role: adminUser.role },
     });
   } catch (err) {
