@@ -61,6 +61,7 @@ router.post('/login', async (req, res) => {
 
 // ─── GET /api/auth/me ─────────────────────────────────────────────────────────
 router.get('/me', protect, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.json({ success: true, user: { id: req.user._id, username: req.user.username, role: req.user.role } });
 });
 
