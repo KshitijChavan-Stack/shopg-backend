@@ -45,8 +45,11 @@ app.get('/api/health', (req, res) => {
 });
 
 // ─── Catch-all for SPA ───────────────────────────────────────────────────────
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'shopg-frontend/build', 'index.html'));
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'shopg-frontend/build', 'index.html'));
+// });
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 // ─── Global error handler ────────────────────────────────────────────────────
