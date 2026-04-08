@@ -2,8 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
-
-const path = require('path');
 const authRoutes = require('./routes/auth');
 const orderRoutes = require('./routes/orders');
 const productRoutes = require('./routes/products');
@@ -15,18 +13,15 @@ const app = express();
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:3000',
-  'http://localhost:5173', // Vite default
-  'https://shopg-backend.onrender.com',
+  'http://localhost:5173',
 ].filter(Boolean);
 
 app.use(cors({
   origin: true,
   credentials: true,
 }));
-app.use(express.json());
 
-// ─── Static files (Production) ───────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, 'shopg-frontend/build')));
+app.use(express.json());
 
 // ─── Health check ────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -44,10 +39,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ShopG backend running ✅' });
 });
 
-// ─── Catch-all for SPA ───────────────────────────────────────────────────────
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'shopg-frontend/build', 'index.html'));
-// });
+// ─── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
